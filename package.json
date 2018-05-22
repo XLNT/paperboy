@@ -1,0 +1,49 @@
+{
+  "name": "@xlnt/trusted-signer",
+  "version": "0.0.1",
+  "description": "Sign and verify signatures using web3 as a microservice.",
+  "main": "lib/index.js",
+  "scripts": {
+    "prepare": "npm run build",
+    "build": "npm run build-ts && npm run tslint",
+    "ts-start": "ts-node src/index.ts",
+    "start": "node dist/index.js",
+    "test": "mocha -r ts-node/register test/**/*.spec.ts",
+    "build-ts": "tsc",
+    "watch-ts": "tsc -w",
+    "tslint": "tslint --project ."
+  },
+  "files": [
+    "lib"
+  ],
+  "repository": "https://github.com/XLNT/trusted-signer",
+  "keywords": [
+    "ethereum"
+  ],
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/XLNT/trusted-signer/issues"
+  },
+  "homepage": "https://github.com/XLNT/trusted-signer#readme",
+  "peerDependencies": {},
+  "dependencies": {},
+  "devDependencies": {
+    "babel-eslint": "^8.2.3",
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb": "^16.1.0",
+    "eslint-config-promise": "^1.2.6",
+    "eslint-config-standard": "^11.0.0",
+    "eslint-plugin-babel": "^5.1.0",
+    "eslint-plugin-import": "^2.12.0",
+    "eslint-plugin-jsx-a11y": "^6.0.3",
+    "eslint-plugin-node": "^6.0.1",
+    "eslint-plugin-promise": "^3.7.0",
+    "eslint-plugin-react": "^7.8.2",
+    "eslint-plugin-standard": "^3.1.0",
+    "tslint": "^5.10.0",
+    "typescript": "^2.8.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
