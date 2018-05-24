@@ -15,8 +15,14 @@ To use paperboy, first start a [gnarly](https://github.com/XLNT/gnarly) instance
 
 But until then, you can play around with paperboy by
 
-```
+```bash
+# install deps
 yarn install
+
+# optionally use default environment variables
+cp .env.example .env
+
+# run the app
 yarn run ts-start
 ```
 
