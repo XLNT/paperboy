@@ -1,5 +1,5 @@
 {
-  "name": "@xlnt/trusted-signer",
+  "name": "@xlnt/paperboy",
   "version": "0.0.1",
   "description": "Sign and verify signatures using web3 as a microservice.",
   "main": "lib/index.js",
@@ -8,6 +8,7 @@
     "build": "npm run build-ts && npm run tslint",
     "ts-start": "ts-node src/index.ts",
     "start": "node dist/index.js",
+    "dev": "nodemon --exec ts-node src/index.ts",
     "test": "mocha -r ts-node/register test/**/*.spec.ts",
     "build-ts": "tsc",
     "watch-ts": "tsc -w",
@@ -16,30 +17,36 @@
   "files": [
     "lib"
   ],
-  "repository": "https://github.com/XLNT/trusted-signer",
+  "repository": "https://github.com/XLNT/paperboy",
   "keywords": [
     "ethereum"
   ],
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/XLNT/trusted-signer/issues"
+    "url": "https://github.com/XLNT/paperboy/issues"
   },
-  "homepage": "https://github.com/XLNT/trusted-signer#readme",
+  "homepage": "https://github.com/XLNT/paperboy#readme",
   "peerDependencies": {},
-  "dependencies": {},
+  "dependencies": {
+    "@xlnt/gnarly-core": "^0.2.3",
+    "@xlnt/gnarly-reducer-block-meta": "^0.2.3",
+    "@xlnt/gnarly-reducer-events": "^0.2.3",
+    "dotenv": "^5.0.1",
+    "koa": "^2.5.1",
+    "koa-bodyparser": "^4.2.1",
+    "koa-logger": "^3.2.0",
+    "koa-router": "^7.4.0",
+    "koa-websocket": "^5.0.0",
+    "lodash": "^4.17.10",
+    "sequelize": "^4.37.8",
+    "supports-color": "^5.4.0",
+    "uuid": "^3.2.1"
+  },
   "devDependencies": {
-    "babel-eslint": "^8.2.3",
-    "eslint": "^4.19.1",
-    "eslint-config-airbnb": "^16.1.0",
-    "eslint-config-promise": "^1.2.6",
-    "eslint-config-standard": "^11.0.0",
-    "eslint-plugin-babel": "^5.1.0",
-    "eslint-plugin-import": "^2.12.0",
-    "eslint-plugin-jsx-a11y": "^6.0.3",
-    "eslint-plugin-node": "^6.0.1",
-    "eslint-plugin-promise": "^3.7.0",
-    "eslint-plugin-react": "^7.8.2",
-    "eslint-plugin-standard": "^3.1.0",
+    "@types/node": "^10.1.2",
+    "debug": "^3.1.0",
+    "pg": "^7.4.3",
+    "ts-node": "^6.0.3",
     "tslint": "^5.10.0",
     "typescript": "^2.8.3"
   },
