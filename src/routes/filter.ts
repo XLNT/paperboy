@@ -1,9 +1,11 @@
+import makeDebug = require('debug')
 import _  = require('lodash')
 import uuid = require('uuid')
 import { IWSRequest } from '../'
 import { IFilter, IFilterOptions } from '../Filter'
 import globals from '../globals'
 import { send } from '../utils'
+const debug = makeDebug('paperboy:send')
 
 interface IFilterRequest extends IWSRequest {
   args: IFilterOptions,
@@ -38,6 +40,7 @@ const toResponse = (event) => _.pickBy(event, (v, k) => validKeys.includes(k))
 export default async (ctx: any, req: IFilterRequest) => {
 
   const onMatch = async (events: any[]): Promise<void> => {
+    debug(`Sending ${events.length} events`)
     events.forEach((event) => {
       send(ctx, 'match', toResponse(event))
     })

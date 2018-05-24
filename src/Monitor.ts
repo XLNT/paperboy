@@ -23,8 +23,11 @@ class Monitor {
   private sequelize: any
   private FilterDelivery: any
   private Transaction: any
-  private Events: any
+  private Patch: any
   private Block: any
+  private Events: any
+  private EventsToFilterDelivery: any
+  private TransactionToBlock: any
   private stopChecking: NodeJS.Timer
 
   constructor (
@@ -44,23 +47,23 @@ class Monitor {
       },
     })
 
-    // @TODO(shrugs) - share this stuff with gnarly somehow (@xlnt/gnarly-models-sequelize)?
-
     const { DataTypes } = Sequelize
-    const { Transaction } = makeGnarlyModels(Sequelize, this.sequelize)
+    const { Transaction, Patch } = makeGnarlyModels(Sequelize, this.sequelize)
     const { Events } = makeEventsModels(Sequelize, this.sequelize)
-    const { Block } = makeBlockMetaModels(Sequelize, this.sequelize)
+    const { Block, TransactionToBlock } = makeBlockMetaModels(Sequelize, this.sequelize)
 
     this.Transaction = Transaction
+    this.Patch = Patch
     this.Events = Events
     this.Block = Block
+    this.TransactionToBlock = TransactionToBlock
     this.FilterDelivery = this.sequelize.define('filter_delivery', {
       filterId: { type: DataTypes.STRING },
       delivered: { type: DataTypes.BOOLEAN, defaultValue: false },
     })
 
-    this.FilterDelivery.belongsTo(this.Events)
-    this.Events.hasMany(this.FilterDelivery)
+    this.FilterDelivery.Event = this.FilterDelivery.belongsTo(this.Events)
+    this.EventsToFilterDelivery = this.Events.hasMany(this.FilterDelivery)
 
     this.start()
   }
@@ -86,6 +89,9 @@ class Monitor {
 
   public stop = async () => {
     clearInterval(this.stopChecking)
+    for (const filterKey of Object.keys(this.activeFilters)) {
+      await this.removeFilter(filterKey)
+    }
   }
 
   private start = async () => {
@@ -111,18 +117,27 @@ class Monitor {
       where.address = { [Op.in]: filter.options.addresses }
     }
 
-    // if (filter.fromBlock) {
-    //   include.push({
-    //     model: this.Transaction,
-    //     include: [{
-    //       model: this.Block,
-    //       where: this.sequelize.where(
-    //         this.sequelize.cast('block.number', 'integer'),
-    //         { [Op.gte]: filter.fromBlock },
-    //       ),
-    //     }],
-    //   })
-    // }
+    if (filter.options.fromBlock) {
+      include.push({
+        model: this.Patch,
+        association: this.Events.Patch,
+        include: [{
+          model: this.Transaction,
+          association: this.Patch.Transaction,
+          include: [{
+            model: this.Block,
+            association: this.TransactionToBlock,
+            // sequelize complains about this line not using the Op.* format
+            // but then give no docs on how to migrate to it
+            // so, like, _whatever_
+            where: this.sequelize.where(
+              this.sequelize.cast(this.sequelize.col('number'), 'integer'),
+              { [Op.gte]: filter.options.fromBlock },
+            ),
+          }],
+        }],
+      })
+    }
 
     // if (filter.args) {
 
@@ -133,6 +148,7 @@ class Monitor {
     where['$filter_deliveries.delivered$'] = { [Op.eq]: null }
     include.push({
       model: this.FilterDelivery,
+      association: this.EventsToFilterDelivery,
       where: { filterId: { [Op.eq]: id } },
       required: false,
     })
