@@ -38,16 +38,21 @@ const validKeys = [
 const toResponse = (event) => _.pickBy(event, (v, k) => validKeys.includes(k))
 
 export default async (ctx: any, req: IFilterRequest) => {
+  const filterOptions = req.args
+  const id = uuid.v4()
+
+  // @TODO(shrugs) - argument validation
 
   const onMatch = async (events: any[]): Promise<void> => {
     debug(`Sending ${events.length} events`)
     events.forEach((event) => {
-      send(ctx, 'match', toResponse(event))
+      send(ctx, 'match', {
+        id,
+        event: toResponse(event),
+      })
     })
   }
 
-  const filterOptions = req.args
-  const id = uuid.v4()
   const filter = {
     options: filterOptions,
     onMatch,

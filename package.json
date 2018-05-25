@@ -31,6 +31,7 @@
     "@xlnt/gnarly-core": "^0.2.3",
     "@xlnt/gnarly-reducer-block-meta": "^0.2.3",
     "@xlnt/gnarly-reducer-events": "^0.2.3",
+    "bn.js": "^4.11.8",
     "dotenv": "^5.0.1",
     "koa": "^2.5.1",
     "koa-bodyparser": "^4.2.1",

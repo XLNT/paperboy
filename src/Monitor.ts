@@ -1,9 +1,13 @@
+import BN from 'bn.js'
+import _ = require('lodash')
+
 import { IFilter } from './Filter'
 
 import Sequelize = require('sequelize')
 
 import {
   makeSequelizeModels as makeGnarlyModels,
+  toBN,
 } from '@xlnt/gnarly-core'
 
 import {
@@ -29,6 +33,8 @@ class Monitor {
   private EventsToFilterDelivery: any
   private TransactionToBlock: any
   private stopChecking: NodeJS.Timer
+
+  private headBlockNumber: BN
 
   constructor (
     connectionString: string,
@@ -101,6 +107,16 @@ class Monitor {
   }
 
   private tick = async () => {
+    // first, if any of the filters require it, pull the
+    // latest block so that every filter uses the same confirmation reference
+    const res = await this.Block.findOne({
+      attributes: ['number'],
+      order: [['unsafeNumber', 'DESC']],
+      // @TODO(shrugs) - this won't scale past whatever postgres' integer is
+      raw: true,
+    })
+    this.headBlockNumber = toBN(res.number)
+
     // every interval, check each of the filters in turn
     for (const k of Object.keys(this.activeFilters)) {
       await this.handleFilter(k, this.activeFilters[k])
@@ -110,14 +126,46 @@ class Monitor {
   private handleFilter = async (id: string, filter: IFilter) => {
     const { Op } = Sequelize
 
-    const where: any = {}
+    const wheres: any = []
     const include: any = []
     // if there are addresess to filter by, include those as an IN condition
     if (filter.options.addresses) {
-      where.address = { [Op.in]: filter.options.addresses }
+      wheres.push({
+        address: { [Op.in]: filter.options.addresses },
+      })
     }
 
-    if (filter.options.fromBlock) {
+    const needToIncludeBlocks =
+      filter.options.fromBlock !== undefined ||
+      filter.options.confirmations !== undefined
+    if (needToIncludeBlocks) {
+      const blockWheres: any[] = []
+
+      if (filter.options.fromBlock) {
+        // sequelize complains about this line not using the Op.* format
+        // but then give no docs on how to migrate to it
+        // so, like, _whatever_
+        blockWheres.push(this.sequelize.where(
+          this.sequelize.cast(this.sequelize.col('number'), 'integer'),
+          { [Op.gte]: this.sequelize.cast(filter.options.fromBlock, 'integer') },
+        ))
+      }
+
+      if (filter.options.confirmations) {
+        blockWheres.push(
+          // @TODO(shrugs) - fix this atrocity of a query
+          // 1. should use sequelize.fn
+          // 2. should let sequelize generate that terrible table alias
+          this.sequelize.where(
+            this.sequelize.literal(`(
+              ${this.headBlockNumber.toString()} -
+              "patch->transaction->block"."number"::INTEGER )
+            `),
+            { [Op.gte]: filter.options.confirmations },
+          ),
+        )
+      }
+
       include.push({
         model: this.Patch,
         association: this.Events.Patch,
@@ -127,25 +175,29 @@ class Monitor {
           include: [{
             model: this.Block,
             association: this.TransactionToBlock,
-            // sequelize complains about this line not using the Op.* format
-            // but then give no docs on how to migrate to it
-            // so, like, _whatever_
-            where: this.sequelize.where(
-              this.sequelize.cast(this.sequelize.col('number'), 'integer'),
-              { [Op.gte]: filter.options.fromBlock },
-            ),
+            where: {
+              [Op.and]: blockWheres,
+            },
           }],
         }],
       })
     }
 
-    // if (filter.args) {
-
-    // }
+    // include argument filters
+    if (filter.options.args) {
+      wheres.push({
+        args: _.reduce(filter.options.args, (memo, v, k) => {
+          memo[k] = { [Op.in]: _.castArray(v) }
+          return memo
+        }, {}),
+      })
+    }
 
     // include delivery status
     // and filter for events that have not been delivered
-    where['$filter_deliveries.delivered$'] = { [Op.eq]: null }
+    wheres.push({
+      '$filter_deliveries.delivered$': { [Op.eq]: null },
+    })
     include.push({
       model: this.FilterDelivery,
       association: this.EventsToFilterDelivery,
@@ -156,7 +208,9 @@ class Monitor {
     // fetch
     // @TODO(shrugs) - throttle with batch*()
     const undelivered = await this.Events.findAll({
-      where,
+      where: {
+        [Op.and]: wheres,
+      },
       include,
     })
 
