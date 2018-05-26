@@ -7,8 +7,13 @@
 
 **Basically, it'll solve your event watching problems.**
 
-> ## 🛠 Status: In Development
-> paperboy is currently in development. If you'd like to play around with it, check out the usage instructions below. We'll be making `XLNT/scry-one` into a paperboy client in the near future.
+## Features
+
+1. More resilient than eth_newFilter,
+2. Filter by decoded arguments, not just `topics`,
+3. Filter by `event` (`"Transfer(address,address,uint256)"`) not just the event signaure,
+4. Filter by `eventName` (`"Transfer"`) for ease of use, and
+5. Filter by `confirmation` level (i.e. wait for 10 confirmations before alerting the frontend).
 
 ## Background
 
