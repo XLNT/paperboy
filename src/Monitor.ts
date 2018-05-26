@@ -23,6 +23,8 @@ import {
  * Gnarly must be configured with the `@xlnt/gnarly-reducer-events` reducer.
  */
 class Monitor {
+  public headBlockNumber: BN
+
   private activeFilters: { [_: string]: IFilter } = {}
   private sequelize: any
   private FilterDelivery: any
@@ -33,8 +35,6 @@ class Monitor {
   private EventsToFilterDelivery: any
   private TransactionToBlock: any
   private stopChecking: NodeJS.Timer
-
-  private headBlockNumber: BN
 
   constructor (
     connectionString: string,
@@ -107,8 +107,7 @@ class Monitor {
   }
 
   private tick = async () => {
-    // first, if any of the filters require it, pull the
-    // latest block so that every filter uses the same confirmation reference
+    // pull the latest block so that every filter uses the same confirmation reference
     const res = await this.Block.findOne({
       attributes: ['number'],
       order: [['unsafeNumber', 'DESC']],
@@ -151,8 +150,20 @@ class Monitor {
         ))
       }
 
+      if (filter.options.event) {
+        blockWheres.push({
+          event: { [Op.eq]: filter.options.event },
+        })
+      }
+
+      if (filter.options.eventName) {
+        blockWheres.push({
+          eventName: { [Op.eq]: filter.options.eventName },
+        })
+      }
+
       if (filter.options.confirmations) {
-        blockWheres.push(
+        wheres.push(
           // @TODO(shrugs) - fix this atrocity of a query
           // 1. should use sequelize.fn
           // 2. should let sequelize generate that terrible table alias

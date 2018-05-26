@@ -53,6 +53,10 @@ export default async (ctx: any, req: IFilterRequest) => {
     })
   }
 
+  if (!filterOptions.fromBlock) {
+    filterOptions.fromBlock = globals.headBlockNumber
+  }
+
   const filter = {
     options: filterOptions,
     onMatch,

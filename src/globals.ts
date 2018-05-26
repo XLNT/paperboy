@@ -8,6 +8,10 @@ class Globals {
     this.monitor = monitor
   }
 
+  public get headBlockNumber (): string {
+    return this.monitor.headBlockNumber.toString()
+  }
+
   public addFilter = async (id: string, filter: IFilter) => {
     await this.monitor.addFilter(id, filter)
   }
