@@ -72,7 +72,6 @@ const main = async () => {
   app.listen(PORT, () => {
     debug(`running on port ${PORT}`)
   })
-
 }
 
 process.on('unhandledRejection', (error) => {

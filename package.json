@@ -3,16 +3,21 @@
   "version": "0.0.1",
   "description": "Sign and verify signatures using web3 as a microservice.",
   "main": "lib/index.js",
+  "bin": "lib/index.js",
   "scripts": {
     "prepare": "npm run build",
     "build": "npm run build-ts && npm run tslint",
     "ts-start": "ts-node src/index.ts",
-    "start": "node dist/index.js",
+    "start": "node lib/index.js",
     "dev": "nodemon --exec ts-node src/index.ts",
     "test": "mocha -r ts-node/register test/**/*.spec.ts",
     "build-ts": "tsc",
     "watch-ts": "tsc -w",
-    "tslint": "tslint --project ."
+    "tslint": "tslint --project .",
+    "pkg": "pkg --targets node9-linux-x64,node9-macos-x64 --out-path ./pkg .",
+    "build-bin": "yarn run pkg && yarn run docker-build",
+    "docker-build": "docker build -t shrugs/paperboy:latest .",
+    "docker-push": "docker push shrugs/paperboy:latest"
   },
   "files": [
     "lib"
@@ -47,6 +52,7 @@
     "@types/node": "^10.1.2",
     "debug": "^3.1.0",
     "pg": "^7.4.3",
+    "pkg": "^4.3.1",
     "ts-node": "^6.0.3",
     "tslint": "^5.10.0",
     "typescript": "^2.8.3"
