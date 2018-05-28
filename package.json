@@ -15,10 +15,10 @@
     "watch-ts": "tsc -w",
     "tslint": "tslint --project .",
     "pkg": "pkg --targets node9-linux-x64,node9-macos-x64 --out-path ./pkg .",
-    "build-bin": "yarn run pkg && yarn run docker-build",
-    "docker-build": "docker build -t shrugs/paperboy:latest .",
-    "docker-push": "docker push shrugs/paperboy:latest",
-    "deploy": "yarn run build && yarn run pkg && yarn run docker-build && yarn run docker-push"
+    "build-bin": "yarn run build-ts && yarn run pkg && yarn run docker-build",
+    "docker-build": "docker build -t shrugs/paperboy:demo .",
+    "docker-push": "docker push shrugs/paperboy:demo",
+    "deploy": "yarn run build-bin && yarn run docker-push"
   },
   "files": [
     "lib"

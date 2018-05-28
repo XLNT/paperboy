@@ -94,7 +94,7 @@ class Monitor {
   }
 
   public stop = async () => {
-    clearInterval(this.stopChecking)
+    clearTimeout(this.stopChecking)
     for (const filterKey of Object.keys(this.activeFilters)) {
       await this.removeFilter(filterKey)
     }
@@ -103,7 +103,7 @@ class Monitor {
   private start = async () => {
     // if this process ever crashes, the clients need to handle recovery
     this.FilterDelivery.sync({ force: true })
-    this.stopChecking = setInterval(this.tick, this.interval)
+    await this.tick()
   }
 
   private tick = async () => {
@@ -114,12 +114,19 @@ class Monitor {
       // @TODO(shrugs) - this won't scale past whatever postgres' integer is
       raw: true,
     })
+    if (!res) {
+      // we have no blocks
+      return
+    }
     this.headBlockNumber = toBN(res.number)
 
     // every interval, check each of the filters in turn
     for (const k of Object.keys(this.activeFilters)) {
       await this.handleFilter(k, this.activeFilters[k])
     }
+
+    // schedule self again
+    this.stopChecking = setTimeout(this.tick, this.interval)
   }
 
   private handleFilter = async (id: string, filter: IFilter) => {
@@ -151,13 +158,13 @@ class Monitor {
       }
 
       if (filter.options.event) {
-        blockWheres.push({
+        wheres.push({
           event: { [Op.eq]: filter.options.event },
         })
       }
 
       if (filter.options.eventName) {
-        blockWheres.push({
+        wheres.push({
           eventName: { [Op.eq]: filter.options.eventName },
         })
       }
