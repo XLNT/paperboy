@@ -242,7 +242,7 @@ class Monitor {
 
     await this.FilterDelivery.bulkCreate(undelivered.map((ud) => ({
       filterId: id,
-      eventId: ud.get('id'),
+      eventUuid: ud.get('uuid'),
       delivered: true,
     })))
   }
